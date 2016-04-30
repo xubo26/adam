@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.bdgenomics.adam.algorithms.smithwaterman
+package org.bdgenomics.adamLocal.algorithms.smithwaterman
 
 import htsjdk.samtools.{ Cigar, TextCigarCodec }
 import scala.annotation.tailrec
@@ -24,7 +24,8 @@ abstract class SmithWaterman(xSequence: String, ySequence: String) extends Seria
 
   lazy val (scoringMatrix, moveMatrix) = buildScoringMatrix()
   lazy val (cigarX, cigarY, xStart, yStart) = trackback(scoringMatrix, moveMatrix)
-
+  lazy val maxScore=maxScores(scoringMatrix)
+  
   /**
    * Builds Smith-Waterman scoring matrix.
    *
@@ -65,6 +66,57 @@ abstract class SmithWaterman(xSequence: String, ySequence: String) extends Seria
       x += 1
     }
     (yMax, xMax)
+  }
+
+  /**
+   * Finds coordinates and Score of a matrix with highest value.
+   *
+   * @param matrix Matrix to score.
+   * @return (i,j,maxScore):Tuple of (i, j) coordinates and maxScore.
+   */
+  private[smithwaterman] final def maxCoordinatesAndScore(matrix: Array[Array[Double]]): (Int, Int, Double) = {
+    var xMax = 0
+    var yMax = 0
+    var maxScoreReturn = 0
+    var max = Double.MinValue
+    var x = 0
+    while (x < matrix.length) {
+      var y = 0
+      while (y < matrix(x).length) {
+        if (matrix(x)(y) >= max) {
+          max = matrix(x)(y)
+          xMax = x
+          yMax = y
+        }
+        y += 1
+      }
+      x += 1
+    }
+    (yMax, xMax, matrix(xMax)(yMax))
+  }
+
+  /**
+   * Finds coordinates and Score of a matrix with highest value.
+   *
+   * @param matrix Matrix to score.
+   * @return (i,j,maxScore):Tuple of (i, j) coordinates and maxScore.
+   */
+  private[smithwaterman] final def maxScores(matrix: Array[Array[Double]]):Double = {
+
+    var maxScoreReturn = 0
+    var max = Double.MinValue
+    var x = 0
+    while (x < matrix.length) {
+      var y = 0
+      while (y < matrix(x).length) {
+        if (matrix(x)(y) >= max) {
+          max = matrix(x)(y)
+        }
+        y += 1
+      }
+      x += 1
+    }
+    max
   }
 
   /**
